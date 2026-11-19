@@ -175,7 +175,7 @@ table.plain tbody tr { cursor: default; }
 .bar-fill { display: block; height: 100%; background: var(--chart); border-radius: 0 4px 4px 0; transition: background .15s; }
 .barrow:hover .bar-fill { background: var(--chart-hover); }
 .bar-value { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 550; white-space: nowrap; }
-.colchart { width: 100%; height: auto; display: block; }
+.colchart { width: 100%; max-width: 720px; height: auto; display: block; margin: 0 auto; }
 .colchart .col { fill: var(--chart); transition: fill .15s; }
 .colchart g:hover .col { fill: var(--chart-hover); }
 .colchart .hit { fill: transparent; }
