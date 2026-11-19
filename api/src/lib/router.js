@@ -25,7 +25,10 @@ function ensureReady() {
     ready = (async () => {
       await db.migrate();
       const u = await db.one('SELECT COUNT(*) AS c FROM users');
-      if (!Number(u.c)) await require('./seed').seed();
+      if (!Number(u.c)) {
+        const seeds = require('./seed');
+        await (process.env.DEMO_DATA === 'false' ? seeds.seedProduction() : seeds.seed());
+      }
     })().catch((e) => { ready = null; throw e; });
   }
   return ready;

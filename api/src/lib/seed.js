@@ -85,6 +85,15 @@ const PFAS = ['Stanbic IBTC Pension', 'ARM Pension', 'Premium Pension', 'Leadway
 const STATES = ['Lagos', 'Ogun', 'Oyo', 'Anambra', 'Enugu', 'Imo', 'Rivers', 'Kano', 'Kaduna', 'FCT', 'Edo', 'Delta', 'Akwa Ibom', 'Kwara', 'Osun'];
 const STREETS = ['Admiralty Way, Lekki', 'Allen Avenue, Ikeja', 'Adeola Odeku St, Victoria Island', 'Herbert Macaulay Way, Yaba', 'Wuse II, Abuja', 'Garki Area 11, Abuja', 'Bodija, Ibadan', 'GRA Phase 2, Port Harcourt', 'Opebi Road, Ikeja', 'Ago Palace Way, Okota'];
 
+const POLICY_TEMPLATES = [
+  ['Code of Conduct', '3.1', '2026-01-01', 'Code of conduct', 1, 'All employees must act with integrity, avoid conflicts of interest, and report concerns through the whistleblowing channel.'],
+  ['Leave Policy', '2.4', '2026-01-01', 'Leave', 1, 'Annual leave is 20 working days for confirmed staff. Up to 5 unused days may be carried into Q1. Sick leave up to 12 days with medical certificate. Maternity 16 weeks, paternity 14 days.'],
+  ['Health, Safety & Environment Policy', '4.0', '2025-07-01', 'Health & safety', 1, 'PPE is mandatory on all sites. Stop-work authority applies to everyone.'],
+  ['Data Protection & Privacy Policy (NDPA 2023)', '1.2', '2025-10-01', 'Data protection', 1, 'Personal data is processed lawfully, minimised and kept secure. Breaches must be reported to the DPO within 24 hours.'],
+  ['Anti-Harassment Policy', '2.0', '2025-01-01', 'Anti-harassment', 1, 'Zero tolerance for harassment of any kind. Report to HR or the confidential hotline.'],
+  ['Hybrid & Remote Work Policy', '1.1', '2026-03-01', 'Remote work', 0, 'Office roles may work remotely up to two days a week with manager approval.'],
+];
+
 async function seed({ reset = false } = {}) {
   if (reset && db.dialect === 'sqlite') {
     const { tables } = require('./schema');
@@ -393,14 +402,7 @@ async function seed({ reset = false } = {}) {
     ['Quarterly HSE fire drill', 'Health & safety', 'Other', addDays(TODAY, 18), 'Quarterly', 'Upcoming', 1, 'All sites.'],
     ['Group life policy renewal', 'Labour law', 'Other', addDays(TODAY, 40), 'Annually', 'Upcoming', 11, 'Required by PRA 2014 s.4(5).'],
   ].map(([title, category, regulator, due_date, frequency, status, owner, notes]) => ({ title, category, regulator, due_date, frequency, status, owner_id: E(owner), notes })));
-  const pol = [
-    ['Code of Conduct', '3.1', '2026-01-01', 'Code of conduct', 1, 'All employees must act with integrity, avoid conflicts of interest, and report concerns through the whistleblowing channel.'],
-    ['Leave Policy', '2.4', '2026-01-01', 'Leave', 1, 'Annual leave is 20 working days for confirmed staff. Up to 5 unused days may be carried into Q1. Sick leave up to 12 days with medical certificate. Maternity 16 weeks, paternity 14 days.'],
-    ['Health, Safety & Environment Policy', '4.0', '2025-07-01', 'Health & safety', 1, 'PPE is mandatory on all sites. Stop-work authority applies to everyone.'],
-    ['Data Protection & Privacy Policy (NDPA 2023)', '1.2', '2025-10-01', 'Data protection', 1, 'Personal data is processed lawfully, minimised and kept secure. Breaches must be reported to the DPO within 24 hours.'],
-    ['Anti-Harassment Policy', '2.0', '2025-01-01', 'Anti-harassment', 1, 'Zero tolerance for harassment of any kind. Report to HR or the confidential hotline.'],
-    ['Hybrid & Remote Work Policy', '1.1', '2026-03-01', 'Remote work', 0, 'Office roles may work remotely up to two days a week with manager approval.'],
-  ];
+  const pol = POLICY_TEMPLATES;
   const polIds = [];
   for (const [title, version, effective_date, category, requires_ack, body] of pol) polIds.push(await db.insert('policies', { title, version, effective_date, category, requires_ack, body }));
   const acks = [];
@@ -411,7 +413,35 @@ async function seed({ reset = false } = {}) {
   console.log(`[seed] Done: ${empIds.length} employees, ${assets.length} assets, ${times.length} time entries.`);
 }
 
-module.exports = { seed };
+// Production start: company settings, departments, the statutory calendar and policy
+// templates, plus one admin login from ADMIN_EMAIL / ADMIN_PASSWORD. No demo people or history.
+async function seedProduction() {
+  const email = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  const password = String(process.env.ADMIN_PASSWORD || '');
+  if (!email || password.length < 8) throw new Error('Set ADMIN_EMAIL and ADMIN_PASSWORD (8+ characters) to create the first admin login.');
+  console.log(`[seed] Setting up an empty Go-Green HR database in ${db.location} ...`);
+  await db.setSetting('company', { name: 'GO-Green Technologies', legal_name: 'GO-Green Technologies', address: 'Lagos, Nigeria', email: 'info@go-greentechnologies.com', website: 'www.go-greentechnologies.com', phone: '0805 671 9672', rc_number: '', tin: '', timezone: 'Africa/Lagos' });
+  await db.setSetting('payroll', DEFAULT_PAYROLL);
+  await db.setSetting('leave_policy', { annual_days: 20, carry_over_max: 5, sick_days: 12, maternity_weeks: 16, paternity_days: 14 });
+  for (const [name, code, cost_center, location] of DEPTS) await db.insert('departments', { name, code, cost_center, location });
+  const thisMonth = TODAY.slice(0, 7);
+  const next = (day) => { const d = `${thisMonth}-${String(day).padStart(2, '0')}`; return d >= TODAY ? d : `${addMonths(thisMonth, 1)}-${String(day).padStart(2, '0')}`; };
+  await db.insertMany('compliance_items', [
+    ['Remit monthly PAYE to LIRS', 'Statutory remittance', 'LIRS', next(10), 'Monthly', 'Due by the 10th of the following month. Other states remitted to their SIRS.'],
+    ['Remit pension contributions to PFAs', 'Statutory remittance', 'PenCom', next(7), 'Monthly', 'Within 7 working days of salary payment (PRA 2014, s.11).'],
+    ['Remit NHF contributions', 'Statutory remittance', 'FMBN (NHF)', next(28), 'Monthly', '2.5% of basic; remit within one month.'],
+    ['NSITF Employee Compensation Scheme (1% of payroll)', 'Statutory remittance', 'NSITF', next(16), 'Monthly', 'Employee Compensation Act 2010.'],
+    ['File employer annual PAYE returns (Form H1)', 'Tax filing', 'LIRS', `${Number(TODAY.slice(0, 4)) + 1}-01-31`, 'Annually', 'Annual returns of all emoluments paid in the year.'],
+    ['ITF 1% training levy and annual returns', 'Statutory remittance', 'ITF', `${Number(TODAY.slice(0, 4)) + 1}-04-01`, 'Annually', 'ITF Amendment Act 2011.'],
+    ['NDPA annual data protection compliance audit', 'Data protection', 'NDPC', `${Number(TODAY.slice(0, 4)) + 1}-03-31`, 'Annually', 'File audit returns via a licensed DPCO.'],
+    ['Group life policy renewal', 'Labour law', 'Other', addDays(TODAY, 60), 'Annually', 'Required by PRA 2014 s.4(5).'],
+  ].map(([title, category, regulator, due_date, frequency, notes]) => ({ title, category, regulator, due_date, frequency, status: 'Upcoming', notes })));
+  for (const [title, version, effective_date, category, requires_ack, body] of POLICY_TEMPLATES) await db.insert('policies', { title, version, effective_date, category, requires_ack, body: `${body} (Template: review and edit before publishing.)` });
+  await db.insert('users', { email, password_hash: bcrypt.hashSync(password, 10), role: 'admin', employee_id: null, active: 1 });
+  await db.insert('audit_log', { user_email: 'system', action: 'seed', entity: 'database', details: 'Production database created', at: new Date().toISOString() });
+}
+
+module.exports = { seed, seedProduction };
 
 if (require.main === module) {
   (async () => {
