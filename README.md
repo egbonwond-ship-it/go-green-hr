@@ -82,6 +82,14 @@ npm run reset-demo   # wipe and reload the local demo data
 npm run swa          # run with the Azure Static Web Apps CLI (needs @azure/static-web-apps-cli and Functions Core Tools)
 ```
 
+## Browser preview (no server, no Azure)
+
+```bash
+npm run build-preview   # writes dist-preview/go-green-hr.html
+```
+
+`go-green-hr.html` is one self-contained file. Open it in any browser to use the full app with the demo data. The real API router runs inside the page on sql.js (SQLite compiled to JavaScript), so every business rule works the same. Changes are saved in that browser only. Downloads and printing work as normal in a browser; the preview is not meant for real employee data.
+
 ## Deploy to Azure
 
 1. **Create the Static Web App.** You need the Azure CLI and `az login`, or use Azure Cloud Shell. This creates the `go-green-hr` Static Web App (Free plan; set `SKU=Standard` for Standard) and its app settings. It does not create a database:
