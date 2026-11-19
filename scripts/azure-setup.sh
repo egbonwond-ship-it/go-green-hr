@@ -7,7 +7,7 @@ set -euo pipefail
 
 APP_NAME="go-green-hr"                 # Static Web App name (portal name)
 RG="${RG:-rg-go-green-hr}"
-LOCATION="${LOCATION:-westeurope}"     # Static Web Apps regions: westeurope, eastus2, centralus, westus2, eastasia
+LOCATION="${LOCATION:-eastasia}"      # Static Web Apps regions: westeurope, eastus2, centralus, westus2, eastasia
 SKU="${SKU:-Free}"                     # Free or Standard
 JWT_SECRET="${JWT_SECRET:-$(openssl rand -hex 32)}"
 
