@@ -9,7 +9,14 @@
     "seed": "node api/src/lib/seed.js",
     "reset-demo": "node api/src/lib/seed.js --reset",
     "swa": "swa start app --api-location api",
-    "test": "node scripts/smoke-test.js"
+    "test": "node scripts/smoke-test.js",
+    "build-preview": "node scripts/build-preview.js"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.2",
+    "sql.js": "^1.10.3"
+  }
 }

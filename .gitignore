@@ -5,3 +5,4 @@ api/local.settings.json
 *.db
 *.db-shm
 *.db-wal
+dist-preview/
