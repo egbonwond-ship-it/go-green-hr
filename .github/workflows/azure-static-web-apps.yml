@@ -38,6 +38,8 @@ jobs:
           api_location: api
           output_location: ""
           skip_app_build: true
+          # Until the deployment token secret is added, run the tests but skip the upload.
+          skip_deploy_on_missing_secrets: true
 
   close_pull_request:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -48,3 +50,4 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: close
+          skip_deploy_on_missing_secrets: true
