@@ -605,7 +605,7 @@ async function route(req) {
   const body = req.body || {};
   const [a, b, c, dd] = parts;
 
-  if (a === 'health') return { db: db.dialect, location: db.dialect === 'sqlite' ? 'local SQLite' : 'Azure SQL', ok: true };
+  if (a === 'health') return { db: db.dialect, location: db.dialect === 'sqlite' ? 'local SQLite' : 'Azure SQL', demo: process.env.DEMO_DATA !== 'false', ok: true };
 
   await ensureReady();
 
