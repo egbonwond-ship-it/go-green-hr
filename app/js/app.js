@@ -55,7 +55,7 @@ const ROUTES = [
 
 function loginPage() {
   const err = h('div', { class: 'error', role: 'alert' });
-  const email = h('input', { type: 'email', name: 'email', required: true, autocomplete: 'username', placeholder: 'you@gogreen.demo' });
+  const email = h('input', { type: 'email', name: 'email', required: true, autocomplete: 'username', placeholder: 'you@go-greentechnologies.com' });
   const password = h('input', { type: 'password', name: 'password', required: true, autocomplete: 'current-password' });
   const submit = async (e) => {
     e.preventDefault(); err.textContent = '';
@@ -65,6 +65,10 @@ function loginPage() {
     } catch (ex) { err.textContent = ex.message; }
   };
   const demo = [['admin@gogreen.demo', 'Admin'], ['hr@gogreen.demo', 'HR Director'], ['payroll@gogreen.demo', 'Payroll officer (HR)'], ['manager@gogreen.demo', 'Line manager'], ['employee@gogreen.demo', 'Employee']];
+  // Only the demo site lists its sample logins. Production shows a plain sign-in form.
+  const demoBox = h('div', { class: 'demo-accounts', hidden: true }, h('b', {}, 'Demo accounts'), h('span', { class: 'muted' }, ' · password GoGreen@2026'),
+    demo.map(([em, label]) => h('button', { type: 'button', onclick: () => { email.value = em; password.value = 'GoGreen@2026'; } }, h('span', {}, label), h('span', { class: 'muted' }, em))));
+  api('health').then((r) => { if (r?.demo) demoBox.hidden = false; }).catch(() => {});
   clear(root).append(h('div', { class: 'login' },
     h('div', { class: 'login-art' },
       h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' } },
@@ -79,8 +83,7 @@ function loginPage() {
       h('label', { class: 'field' }, h('span', {}, 'Email'), email),
       h('label', { class: 'field' }, h('span', {}, 'Password'), password),
       err, h('button', { class: 'btn primary big', type: 'submit' }, 'Sign in'),
-      h('div', { class: 'demo-accounts' }, h('b', {}, 'Demo accounts'), h('span', { class: 'muted' }, ' · password GoGreen@2026'),
-        demo.map(([em, label]) => h('button', { type: 'button', onclick: () => { email.value = em; password.value = 'GoGreen@2026'; } }, h('span', {}, label), h('span', { class: 'muted' }, em))))))));
+      demoBox))));
   email.focus();
 }
 
