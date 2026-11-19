@@ -113,6 +113,15 @@ Application settings (Static Web App → Settings → Environment variables):
 
 The Azure SQL firewall must allow Azure services, because the managed Functions don't have fixed IP addresses. The setup script adds this rule.
 
+## Demo and production sites
+
+| Site | Azure app | Branch | Data |
+|---|---|---|---|
+| Demo | `go-green-hr` | `main` | Built-in demo database with 51 sample employees. It resets when Azure restarts the API. |
+| Production | `go-green-hr-prod` | `production` | Azure SQL Database (free offer, pauses at the monthly free limit). Starts empty. |
+
+To release to production, merge `main` into `production`. The production app has these extra settings: `DEMO_DATA=false`, plus `ADMIN_EMAIL` and `ADMIN_PASSWORD`, which create the first admin login when the database is empty. It also has `SQL_CONNECTION_STRING`. Change the admin password after the first sign-in.
+
 ## Project layout
 
 ```
