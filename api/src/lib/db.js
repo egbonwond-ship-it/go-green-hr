@@ -25,7 +25,7 @@ let impl;
 function sqliteImpl() {
   const Database = require('better-sqlite3');
   const file = process.env.SQLITE_PATH ||
-    (process.env.WEBSITE_INSTANCE_ID ? path.join(os.tmpdir(), 'go-green-hr.db') : path.join(__dirname, '..', '..', 'data', 'go-green-hr.db'));
+    (process.env.WEBSITE_INSTANCE_ID || process.env.NODE_ENV === 'production' ? path.join(os.tmpdir(), 'go-green-hr.db') : path.join(__dirname, '..', '..', 'data', 'go-green-hr.db'));
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const db = new Database(file);
   db.pragma('journal_mode = WAL');

@@ -84,20 +84,22 @@ npm run swa          # run with the Azure Static Web Apps CLI (needs @azure/stat
 
 ## Deploy to Azure
 
-1. **Create the resources.** You need the Azure CLI and `az login`. This creates the `go-green-hr` Static Web App, a serverless Azure SQL database, and the app settings:
+1. **Create the Static Web App.** You need the Azure CLI and `az login`, or use Azure Cloud Shell. This creates the `go-green-hr` Static Web App (Free plan; set `SKU=Standard` for Standard) and its app settings. It does not create a database:
    ```bash
-   SQL_PASSWORD='<strong password>' bash scripts/azure-setup.sh
+   bash scripts/azure-setup.sh
    ```
-   You can also create them in the Azure portal: create a Static Web App named **go-green-hr** (source: GitHub, app location `app`, API location `api`, output location empty) and an Azure SQL Database. Then add the application settings below to the Static Web App.
+   You can also create it in the Azure portal: create a Static Web App named **go-green-hr** (source: GitHub, app location `app`, API location `api`, output location empty). Then add the application settings below.
+
+   **Without a database**, the API uses its built-in SQLite demo database in the Functions' temporary storage. It reloads the demo data whenever Azure restarts the API, so changes don't persist. To keep real data, create a database later and set `SQL_CONNECTION_STRING`.
 2. **Push this folder to a GitHub repository** and add the deployment token as the repository secret `AZURE_STATIC_WEB_APPS_API_TOKEN`.
-3. **Push to `main`.** `.github/workflows/azure-static-web-apps.yml` runs the tests, then deploys. On the first API call, the tables are created in Azure SQL and the demo data is loaded.
+3. **Push to `main`.** `.github/workflows/azure-static-web-apps.yml` runs the tests, then deploys. On the first API call, the tables are created and the demo data is loaded.
 4. **Sign in and change the demo passwords** under Settings → Users & roles. You can also delete the demo data and enter your real employees.
 
 Application settings (Static Web App → Settings → Environment variables):
 
 | Name | Value |
 |---|---|
-| `SQL_CONNECTION_STRING` | `Server=tcp:<server>.database.windows.net,1433;Database=go-green-hr;User Id=<user>;Password=<password>;Encrypt=true` |
+| `SQL_CONNECTION_STRING` (optional) | `Server=tcp:<server>.database.windows.net,1433;Database=go-green-hr;User Id=<user>;Password=<password>;Encrypt=true` |
 | `JWT_SECRET` | A long random string, used to sign login sessions. |
 | `NODE_ENV` | `production` |
 
