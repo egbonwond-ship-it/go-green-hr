@@ -1,5 +1,5 @@
-import { api, money, date, isHR, res, can, today, lookup } from '../api.js';
-import { h, clear, toast, card, badge, dataTable, editRecord, tabs, progress, pageHead, avatar, modal, buildForm, confirmBox, personCell } from '../ui.js';
+import { api, money, date, isHR, res, can, today, lookup, me } from '../api.js';
+import { h, clear, toast, card, badge, dataTable, editRecord, tabs, progress, pageHead, avatar, modal, buildForm, confirmBox, personCell, photoChanger } from '../ui.js';
 
 export async function employees(el) {
   const tbl = dataTable('employees', {
@@ -38,7 +38,7 @@ export async function profile(el, id) {
   if (isHR() && e.status === 'Offboarding') actions.push(h('button', { class: 'btn danger solid', onclick: async () => { if (await confirmBox(`Complete offboarding for ${name}? Their login is disabled, assets are returned to stock and benefits end.`, 'Complete offboarding')) { await api('lifecycle/complete', { method: 'POST', body: { kind: 'offboarding', employee_id: id } }); toast('Offboarding complete'); reload(); } } }, 'Complete offboarding'));
 
   el.append(h('p', {}, h('a', { href: '#/employees' }, '← All employees')));
-  el.append(card(null, h('div', { class: 'profile-head' }, avatar(name, 'lg', e.photo),
+  el.append(card(null, h('div', { class: 'profile-head' }, isHR() || e.id === me() ? photoChanger(name, e.photo, e.id, reload) : avatar(name, 'lg', e.photo),
     h('div', { class: 'grow' }, h('h1', {}, name), h('div', { class: 'muted' }, `${e.job_title} · ${e.department_id__label || ''} · ${e.location || ''}`),
       h('div', { style: { marginTop: '6px' } }, badge(e.status), ' ', h('span', { class: 'muted small' }, `${e.emp_no} · joined ${date(e.hire_date)}${e.manager_id__label ? ` · reports to ${e.manager_id__label}` : ''}`))),
     h('div', { class: 'actions', style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } }, actions))));

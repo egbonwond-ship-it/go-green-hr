@@ -104,6 +104,24 @@ export function photoToDataUrl(file, size = 256) {
   });
 }
 
+// Profile picture that can be clicked to pick a new photo and save it straight away.
+export function photoChanger(name, photo, employeeId, onSaved) {
+  const file = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', hidden: true, onchange: async () => {
+    const f = file.files[0]; file.value = ''; if (!f) return;
+    try {
+      const data = await photoToDataUrl(f);
+      await api(`r/employees/${employeeId}`, { method: 'PUT', body: { photo: data } });
+      toast('Photo updated');
+      // Your own photo also shows in the top bar, so refresh the whole page.
+      if (employeeId === me()) setTimeout(() => location.reload(), 600); else onSaved?.();
+    } catch (e) { toast(e.message, 'err'); }
+  } });
+  return h('span', { class: 'photo-changer' },
+    h('button', { type: 'button', class: 'photo-hit', title: 'Change photo', 'aria-label': `Change photo for ${name}`, onclick: () => file.click() }, avatar(name, 'lg', photo), h('span', { class: 'photo-badge', 'aria-hidden': 'true' }, '✎')),
+    h('button', { type: 'button', class: 'btn sm', onclick: () => file.click() }, photo ? 'Change photo' : 'Add photo'),
+    file);
+}
+
 function photoInput(id, name, val, disabled) {
   const hidden = h('input', { type: 'hidden', name, value: val || '' });
   const preview = h('span', { class: 'photo-preview' });

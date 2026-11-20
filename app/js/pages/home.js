@@ -1,5 +1,5 @@
 import { api, state, money, date, me, isHR, role, res, today, can } from '../api.js';
-import { h, clear, toast, stat, card, badge, dataTable, editRecord, tabs, progress, pageHead, avatar, modal } from '../ui.js';
+import { h, clear, toast, stat, card, badge, dataTable, editRecord, tabs, progress, pageHead, avatar, modal, photoChanger } from '../ui.js';
 import { showPayslip } from './pay.js';
 
 const greet = () => { const hr = Number(new Date().toLocaleTimeString('en-GB', { timeZone: 'Africa/Lagos', hour: '2-digit', hour12: false })); return hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening'; };
@@ -122,7 +122,7 @@ function profileTab(emp, reload) {
   const group = (title, names) => card(title, h('div', { class: 'kv' }, names.map((n) => h('div', {}, h('span', {}, r.fields.find((f) => f.name === n)?.label || n), h('b', {}, show(n))))));
   const name = `${emp.first_name} ${emp.last_name}`;
   return h('div', { class: 'stack' },
-    card(null, h('div', { class: 'profile-head' }, avatar(name, 'lg', emp.photo), h('div', { class: 'grow' }, h('h2', {}, name), h('div', { class: 'muted' }, `${emp.job_title} · ${emp.department_id__label || ''} · ${emp.location || ''}`), h('div', { style: { marginTop: '6px' } }, badge(emp.status), ' ', h('span', { class: 'muted small' }, `${emp.emp_no} · joined ${date(emp.hire_date)}`))),
+    card(null, h('div', { class: 'profile-head' }, photoChanger(name, emp.photo, emp.id, reload), h('div', { class: 'grow' }, h('h2', {}, name), h('div', { class: 'muted' }, `${emp.job_title} · ${emp.department_id__label || ''} · ${emp.location || ''}`), h('div', { style: { marginTop: '6px' } }, badge(emp.status), ' ', h('span', { class: 'muted small' }, `${emp.emp_no} · joined ${date(emp.hire_date)}`))),
       h('button', { class: 'btn primary', onclick: () => editSelf(emp, reload) }, 'Update my details'))),
     group('Work', ['email', 'phone', 'manager_id', 'employment_type', 'grade', 'hire_date']),
     group('Personal', ['dob', 'gender', 'marital_status', 'state_of_origin', 'address', 'emergency_name', 'emergency_phone']),
