@@ -63,7 +63,8 @@ export function badge(v) {
 const BADGE_FIELDS = new Set(['status', 'stage', 'readiness', 'risk_of_loss', 'final_pay_status']);
 
 export function initials(name = '') { return name.split(' ').filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase(); }
-export function avatar(name, size = '') {
+export function avatar(name, size = '', photo = null) {
+  if (photo) return h('img', { class: `avatar photo ${size}`, src: photo, alt: '' });
   let hsh = 0; for (const c of name || '') hsh = (hsh * 31 + c.charCodeAt(0)) % 360;
   return h('span', { class: `avatar ${size}`, style: { '--hue': String(120 + (hsh % 80) - 40) }, 'aria-hidden': 'true' }, initials(name));
 }
@@ -73,6 +74,7 @@ export function display(f, row) {
   const v = row[f.name];
   if (f.type === 'ref') return row[`${f.name}__label`] || (v ? `#${v}` : '');
   if (v == null || v === '') return '';
+  if (f.type === 'image') return v ? h('img', { class: 'avatar photo lg', src: v, alt: '' }) : '';
   if (f.type === 'money') return money(v);
   if (f.type === 'date') return date(v);
   if (f.type === 'bool') return v ? 'Yes' : 'No';
@@ -81,6 +83,42 @@ export function display(f, row) {
   if (f.type === 'number') return num(v, 2);
   if (BADGE_FIELDS.has(f.name)) return badge(v);
   return String(v);
+}
+
+// ---------- photos ----------
+// Shrinks a chosen picture to a 256px square JPEG, so it is small enough to store with the record.
+export function photoToDataUrl(file, size = 256) {
+  return new Promise((resolve, reject) => {
+    if (!/^image\//.test(file.type)) { reject(new Error('Choose an image file (JPEG, PNG or WebP).')); return; }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const c = document.createElement('canvas'); c.width = size; c.height = size;
+      const s = Math.min(img.naturalWidth, img.naturalHeight);
+      c.getContext('2d').drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('That image could not be read. Try a JPEG or PNG.')); };
+    img.src = url;
+  });
+}
+
+function photoInput(id, name, val, disabled) {
+  const hidden = h('input', { type: 'hidden', name, value: val || '' });
+  const preview = h('span', { class: 'photo-preview' });
+  const msg = h('span', { class: 'muted small' });
+  const show = () => { clear(preview).append(hidden.value ? h('img', { class: 'avatar photo lg', src: hidden.value, alt: 'Employee photo' }) : h('span', { class: 'avatar lg' }, '?')); remove.hidden = !hidden.value; };
+  const file = h('input', { id, type: 'file', accept: 'image/jpeg,image/png,image/webp', disabled, onchange: async () => {
+    msg.textContent = '';
+    const f = file.files[0]; if (!f) return;
+    try { hidden.value = await photoToDataUrl(f); show(); } catch (e) { msg.textContent = e.message; }
+    file.value = '';
+  } });
+  const remove = h('button', { type: 'button', class: 'btn sm', disabled, onclick: () => { hidden.value = ''; show(); } }, 'Remove photo');
+  const wrap = h('span', { class: 'photo-field' }, preview, h('span', { class: 'photo-actions' }, file, remove, msg), hidden);
+  show();
+  return wrap;
 }
 
 // ---------- forms ----------
@@ -105,19 +143,20 @@ export async function buildForm(resource, row = {}, { hide = [], lock = [], only
         items.filter((x) => f.ref !== 'employees' || x.status !== 'Terminated' || x.id === val)
           .forEach((x) => input.append(h('option', { value: x.id, selected: x.id === val }, x.label + (x.sub ? ` · ${x.sub}` : ''))));
       });
-    } else if (f.type === 'bool') input = h('input', { id, name: f.name, type: 'checkbox', checked: !!val, disabled });
+    } else if (f.type === 'image') input = photoInput(id, f.name, val, disabled);
+    else if (f.type === 'bool') input = h('input', { id, name: f.name, type: 'checkbox', checked: !!val, disabled });
     else {
       const type = { number: 'number', money: 'number', date: 'date', time: 'time', password: 'password' }[f.type] || 'text';
       input = h('input', { id, name: f.name, type, value: val ?? '', step: f.type === 'money' ? '0.01' : f.type === 'number' ? 'any' : undefined, min: f.min, max: f.max, disabled, autocomplete: f.type === 'password' ? 'new-password' : undefined });
     }
-    const wide = f.type === 'textarea';
+    const wide = f.type === 'textarea' || f.type === 'image';
     form.append(h('label', { class: `field ${wide ? 'wide' : ''} ${f.type === 'bool' ? 'check' : ''}`, for: id },
       h('span', {}, f.label, f.required ? h('b', { class: 'req', 'aria-hidden': 'true' }, ' *') : ''), input));
   }
   form.values = () => {
     const out = {};
     for (const el of form.elements) {
-      if (!el.name || el.disabled) continue;
+      if (!el.name || el.disabled || el.type === 'file') continue;
       out[el.name] = el.type === 'checkbox' ? (el.checked ? 1 : 0) : el.value;
     }
     return out;
@@ -195,7 +234,7 @@ export function dataTable(key, opts = {}) {
   load();
   return box;
 }
-export const personCell = (name) => (name ? h('span', { class: 'person' }, avatar(name, 'xs'), name) : '');
+export const personCell = (name, photo) => (name ? h('span', { class: 'person' }, avatar(name, 'xs', photo), name) : '');
 
 // ---------- layout helpers ----------
 export function pageHead(title, sub, ...actions) {

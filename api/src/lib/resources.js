@@ -36,6 +36,7 @@ const resources = {
     label: 'Employees', module: 'Employee information', order: 'last_name, first_name', title: ['first_name', 'last_name'], owner: 'id',
     perms: { hr: FULL, manager: { r: 'all' }, employee: { r: 'all', u: 'own' } },
     fields: [
+      { name: 'photo', label: 'Photo', type: 'image', list: false, self: true },
       s('emp_no', 'Employee no.', { required: true }), s('first_name', 'First name', { required: true }),
       s('last_name', 'Last name', { required: true }), s('email', 'Work email', { required: true }),
       s('phone', 'Phone', { self: true }), sel('gender', 'Gender', ['Female', 'Male'], { list: false }),

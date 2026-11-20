@@ -99,6 +99,16 @@ async function migrate() {
     const body = Object.entries(cols).map(([c, t]) => `${c} ${T[t]}`).join(', ');
     if (dialect === 'sqlite') await d.exec(`CREATE TABLE IF NOT EXISTS ${name} (${body})`);
     else await d.exec(`IF OBJECT_ID(N'dbo.${name}', N'U') IS NULL CREATE TABLE dbo.${name} (${body})`);
+    // Add columns introduced after the table was first created (never drops or changes existing ones).
+    for (const [c, t] of Object.entries(cols)) {
+      if (t === 'id' || t === 'str!') continue;
+      if (dialect === 'sqlite') {
+        const have = await d.query(`SELECT name FROM pragma_table_info('${name}') WHERE name = ?`, [c]);
+        if (!have.length) await d.exec(`ALTER TABLE ${name} ADD COLUMN ${c} ${T[t]}`);
+      } else {
+        await d.exec(`IF COL_LENGTH(N'dbo.${name}', N'${c}') IS NULL ALTER TABLE dbo.${name} ADD ${c} ${T[t]}`);
+      }
+    }
   }
   for (const [t, c] of indexes) {
     const ix = `ix_${t}_${c}`;

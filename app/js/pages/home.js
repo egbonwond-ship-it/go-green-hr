@@ -122,7 +122,7 @@ function profileTab(emp, reload) {
   const group = (title, names) => card(title, h('div', { class: 'kv' }, names.map((n) => h('div', {}, h('span', {}, r.fields.find((f) => f.name === n)?.label || n), h('b', {}, show(n))))));
   const name = `${emp.first_name} ${emp.last_name}`;
   return h('div', { class: 'stack' },
-    card(null, h('div', { class: 'profile-head' }, avatar(name, 'lg'), h('div', { class: 'grow' }, h('h2', {}, name), h('div', { class: 'muted' }, `${emp.job_title} · ${emp.department_id__label || ''} · ${emp.location || ''}`), h('div', { style: { marginTop: '6px' } }, badge(emp.status), ' ', h('span', { class: 'muted small' }, `${emp.emp_no} · joined ${date(emp.hire_date)}`))),
+    card(null, h('div', { class: 'profile-head' }, avatar(name, 'lg', emp.photo), h('div', { class: 'grow' }, h('h2', {}, name), h('div', { class: 'muted' }, `${emp.job_title} · ${emp.department_id__label || ''} · ${emp.location || ''}`), h('div', { style: { marginTop: '6px' } }, badge(emp.status), ' ', h('span', { class: 'muted small' }, `${emp.emp_no} · joined ${date(emp.hire_date)}`))),
       h('button', { class: 'btn primary', onclick: () => editSelf(emp, reload) }, 'Update my details'))),
     group('Work', ['email', 'phone', 'manager_id', 'employment_type', 'grade', 'hire_date']),
     group('Personal', ['dob', 'gender', 'marital_status', 'state_of_origin', 'address', 'emergency_name', 'emergency_phone']),
@@ -134,7 +134,7 @@ async function editSelf(emp, reload) {
   const r = res('employees');
   const only = isHR() ? undefined : r.fields.filter((f) => f.self).map((f) => f.name);
   const form = await buildForm(r, emp, { only });
-  modal('Update my details', h('div', {}, h('p', { class: 'muted' }, isHR() ? 'As HR you can edit every field.' : 'You can update contact, bank and statutory details. Ask HR to change anything else.'), form), {
+  modal('Update my details', h('div', {}, h('p', { class: 'muted' }, isHR() ? 'As HR you can edit every field.' : 'You can update your photo, contact, bank and statutory details. Ask HR to change anything else.'), form), {
     wide: true,
     actions: [{ label: 'Cancel', onClick: (c) => c() }, { label: 'Save', kind: 'primary', onClick: async (c) => {
       try { await api(`r/employees/${emp.id}`, { method: 'PUT', body: form.values() }); toast('Details updated'); c(); reload(); } catch (e) { toast(e.message, 'err'); }

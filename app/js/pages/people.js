@@ -38,7 +38,7 @@ export async function profile(el, id) {
   if (isHR() && e.status === 'Offboarding') actions.push(h('button', { class: 'btn danger solid', onclick: async () => { if (await confirmBox(`Complete offboarding for ${name}? Their login is disabled, assets are returned to stock and benefits end.`, 'Complete offboarding')) { await api('lifecycle/complete', { method: 'POST', body: { kind: 'offboarding', employee_id: id } }); toast('Offboarding complete'); reload(); } } }, 'Complete offboarding'));
 
   el.append(h('p', {}, h('a', { href: '#/employees' }, '← All employees')));
-  el.append(card(null, h('div', { class: 'profile-head' }, avatar(name, 'lg'),
+  el.append(card(null, h('div', { class: 'profile-head' }, avatar(name, 'lg', e.photo),
     h('div', { class: 'grow' }, h('h1', {}, name), h('div', { class: 'muted' }, `${e.job_title} · ${e.department_id__label || ''} · ${e.location || ''}`),
       h('div', { style: { marginTop: '6px' } }, badge(e.status), ' ', h('span', { class: 'muted small' }, `${e.emp_no} · joined ${date(e.hire_date)}${e.manager_id__label ? ` · reports to ${e.manager_id__label}` : ''}`))),
     h('div', { class: 'actions', style: { display: 'flex', gap: '8px', flexWrap: 'wrap' } }, actions))));
@@ -88,7 +88,7 @@ export async function orgChart(el) {
     const open = !collapsed.has(r.id) || search || dept;
     return h('li', {},
       kids.length ? h('button', { class: 'org-toggle', 'aria-label': open ? 'Collapse' : 'Expand', onclick: () => { collapsed.has(r.id) ? collapsed.delete(r.id) : collapsed.add(r.id); draw(); } }, open ? '−' : '+') : h('span', { style: { display: 'inline-block', width: '28px' } }),
-      h('span', { class: 'org-node', style: matches(r) && (search || dept) ? { borderColor: 'var(--brand)' } : {}, onclick: () => { location.hash = `#/employees/${r.id}`; } }, avatar(nm), h('div', {}, h('b', {}, nm), h('span', {}, `${r.job_title} · ${r.department || ''}`)),
+      h('span', { class: 'org-node', style: matches(r) && (search || dept) ? { borderColor: 'var(--brand)' } : {}, onclick: () => { location.hash = `#/employees/${r.id}`; } }, avatar(nm, '', r.photo), h('div', {}, h('b', {}, nm), h('span', {}, `${r.job_title} · ${r.department || ''}`)),
         size(r.id) ? h('span', { class: 'count', title: 'People in this reporting line' }, size(r.id)) : null),
       kids.length && open ? h('ul', {}, kids.map(node)) : null);
   };

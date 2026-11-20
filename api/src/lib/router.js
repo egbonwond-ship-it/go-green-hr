@@ -59,7 +59,7 @@ async function authenticate(headers) {
 
 async function audit(ctx, action, entity, entityId, details) {
   try {
-    await db.insert('audit_log', { user_id: ctx?.user?.id, user_email: ctx?.user?.email || 'system', action, entity, entity_id: entityId, details: details ? JSON.stringify(details).slice(0, 2000) : null, at: new Date().toISOString() });
+    await db.insert('audit_log', { user_id: ctx?.user?.id, user_email: ctx?.user?.email || 'system', action, entity, entity_id: entityId, details: details ? JSON.stringify(details, (k, v) => (typeof v === 'string' && v.startsWith('data:image/') ? '[photo]' : v)).slice(0, 2000) : null, at: new Date().toISOString() });
   } catch { /* never block a request on audit */ }
 }
 
@@ -144,6 +144,11 @@ function validate(res, data, partial) {
     } else if (f.type === 'bool') v = v === true || v === 1 || v === '1' || v === 'true' || v === 'on' ? 1 : 0;
     else if (f.type === 'date' && !/^\d{4}-\d{2}-\d{2}$/.test(String(v))) fail(400, `${f.label} must be a date`);
     else if (f.type === 'select' && !f.options.includes(v)) fail(400, `${f.label} must be one of: ${f.options.join(', ')}`);
+    else if (f.type === 'image') {
+      v = String(v);
+      if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v)) fail(400, `${f.label} must be a JPEG, PNG or WebP image`);
+      if (v.length > 400000) fail(400, `${f.label} is too large (300 KB at most)`);
+    }
     else v = String(v).trim();
     out[f.name] = v;
   }
@@ -573,7 +578,7 @@ async function analytics(ctx) {
 }
 
 async function orgChart() {
-  const rows = await db.query(`SELECT e.id, e.first_name, e.last_name, e.job_title, e.manager_id, e.location, e.status, e.department_id,
+  const rows = await db.query(`SELECT e.id, e.first_name, e.last_name, e.job_title, e.manager_id, e.location, e.status, e.department_id, e.photo,
     (SELECT d.name FROM departments d WHERE d.id = e.department_id) AS department FROM employees e WHERE e.status <> 'Terminated' ORDER BY e.last_name`);
   return rows;
 }
@@ -632,14 +637,14 @@ async function route(req) {
   }
 
   if (a === 'meta' && method === 'GET') {
-    const me = ctx.user.employee_id ? await db.one('SELECT id, first_name, last_name, job_title, department_id FROM employees WHERE id = ?', [ctx.user.employee_id]) : null;
+    const me = ctx.user.employee_id ? await db.one('SELECT id, first_name, last_name, job_title, department_id, photo FROM employees WHERE id = ?', [ctx.user.employee_id]) : null;
     const res = {};
     for (const r of Object.values(resources)) {
       const perms = { r: scopeFor(r, ctx, 'r'), c: scopeFor(r, ctx, 'c'), u: scopeFor(r, ctx, 'u'), d: scopeFor(r, ctx, 'd') };
       if (!perms.r && !perms.c) continue;
       res[r.key] = { key: r.key, label: r.label, module: r.module, owner: r.owner, title: r.title, readonly: !!r.readonly, perms, fields: r.fields };
     }
-    return { user: { ...ctx.user, name: me ? fullName(me) : ctx.user.email, job_title: me?.job_title }, team: ctx.team, resources: res, settings: await publicSettings(), db: db.dialect };
+    return { user: { ...ctx.user, name: me ? fullName(me) : ctx.user.email, job_title: me?.job_title, photo: me?.photo || null }, team: ctx.team, resources: res, settings: await publicSettings(), db: db.dialect };
   }
 
   if (a === 'lookup' && b && method === 'GET') {
