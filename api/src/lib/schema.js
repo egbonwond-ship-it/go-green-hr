@@ -26,7 +26,7 @@ const tables = {
     job_title: 'str', grade: 'str', department_id: 'int', manager_id: 'int', location: 'str',
     employment_type: 'str', hire_date: 'date', status: 'str', base_salary: 'num',
     bank_name: 'str', bank_account: 'str', pension_pfa: 'str', pension_pin: 'str', tax_id: 'str',
-    nhf_no: 'str', annual_rent: 'num', emergency_name: 'str', emergency_phone: 'str',
+    nhf_no: 'str', annual_rent: 'num', photo: 'text', emergency_name: 'str', emergency_phone: 'str',
     leave_balance: 'num', termination_date: 'date',
   },
 

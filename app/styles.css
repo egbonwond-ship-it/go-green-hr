@@ -273,3 +273,7 @@ table.plain tbody tr { cursor: default; }
   .who .meta, .hide-sm { display: none !important; }
   input[type=search] { width: 100%; }
 }
+.avatar.photo { object-fit: cover; background: var(--surface-2); padding: 0; }
+.photo-field { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.photo-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.photo-actions input[type=file] { max-width: 100%; }

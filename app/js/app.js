@@ -107,7 +107,7 @@ function shell() {
     h('span', { class: 'spacer' }),
     state.meta.db === 'sqlite' ? h('span', { class: 'badge neutral hide-sm', title: 'Running on the local demo database. Set SQL_CONNECTION_STRING to use Azure SQL.' }, 'Demo database') : null,
     themeBtn,
-    h('div', { class: 'who' }, h('div', { class: 'meta' }, h('b', {}, u.name), h('span', {}, u.job_title || u.email)), avatar(u.name), h('span', { class: 'role-pill hide-sm' }, u.role)),
+    h('div', { class: 'who' }, h('div', { class: 'meta' }, h('b', {}, u.name), h('span', {}, u.job_title || u.email)), avatar(u.name, '', u.photo), h('span', { class: 'role-pill hide-sm' }, u.role)),
     h('button', { class: 'btn sm hide-sm', onclick: changePassword }, 'Password'),
     h('button', { class: 'btn sm', onclick: () => { setToken(null); state.meta = null; location.hash = '#/login'; } }, 'Sign out'));
   const content = h('main', { class: 'content', id: 'content', tabindex: -1 });
