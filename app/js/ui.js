@@ -90,17 +90,19 @@ export function display(f, row) {
 export function photoToDataUrl(file, size = 256) {
   return new Promise((resolve, reject) => {
     if (!/^image\//.test(file.type)) { reject(new Error('Choose an image file (JPEG, PNG or WebP).')); return; }
+    // Read as a data: URL. The site's Content-Security-Policy allows data: images but not blob: ones.
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('That image could not be read. Try a JPEG or PNG.'));
+    reader.onload = () => { img.src = reader.result; };
     const img = new Image();
-    const url = URL.createObjectURL(file);
     img.onload = () => {
       const c = document.createElement('canvas'); c.width = size; c.height = size;
       const s = Math.min(img.naturalWidth, img.naturalHeight);
       c.getContext('2d').drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, size, size);
-      URL.revokeObjectURL(url);
       resolve(c.toDataURL('image/jpeg', 0.85));
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('That image could not be read. Try a JPEG or PNG.')); };
-    img.src = url;
+    img.onerror = () => reject(new Error('That image could not be read. Try a JPEG or PNG.'));
+    reader.readAsDataURL(file);
   });
 }
 

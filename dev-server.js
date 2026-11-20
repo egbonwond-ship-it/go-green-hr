@@ -8,6 +8,8 @@ const { handle } = require('./api/src/lib/router');
 
 const PORT = Number(process.env.PORT) || 4280;
 const APP_DIR = path.join(__dirname, 'app');
+// Send the same security headers as Azure (staticwebapp.config.json), so CSP problems show up locally too.
+const SECURITY = JSON.parse(fs.readFileSync(path.join(APP_DIR, 'staticwebapp.config.json'), 'utf8')).globalHeaders || {};
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png', '.ico': 'image/x-icon' };
 
 http.createServer(async (req, res) => {
@@ -24,7 +26,7 @@ http.createServer(async (req, res) => {
   let file = path.normalize(path.join(APP_DIR, decodeURIComponent(url.pathname)));
   if (!file.startsWith(APP_DIR)) { res.writeHead(403); return res.end(); }
   if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(APP_DIR, 'index.html');
-  res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
+  res.writeHead(200, { ...SECURITY, 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
   fs.createReadStream(file).pipe(res);
 }).listen(PORT, () => {
   console.log(`Go-Green HR running at http://localhost:${PORT}`);
