@@ -277,3 +277,8 @@ table.plain tbody tr { cursor: default; }
 .photo-field { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .photo-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
 .photo-actions input[type=file] { max-width: 100%; }
+.photo-changer { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
+.photo-hit { position: relative; border: 0; padding: 0; background: none; border-radius: 50%; cursor: pointer; }
+.photo-hit:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+.photo-badge { position: absolute; right: -2px; bottom: -2px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: var(--brand); color: var(--brand-ink); border: 2px solid var(--surface); }
+.photo-hit:hover .avatar { filter: brightness(.9); }
